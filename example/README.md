@@ -1,8 +1,13 @@
 # gorazor Example
 
-## Using
+Building the views
 
-Requires [node.js](http://nodejs.org)
+    cd example
+    gorazor views views
+
+## Rebuilding views automatically
+
+Requires [node.js](http://nodejs.org) for auto building.
 
 Install gulp and deps
 
@@ -10,7 +15,7 @@ Install gulp and deps
     npm install gulp -g
     npm install
 
-Building the views
+Building the views with gulp
 
     gulp views
 
