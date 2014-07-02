@@ -266,8 +266,8 @@ func (cp *Compiler) processLayout() {
 		if strings.HasPrefix(l, "section") && strings.HasSuffix(l, "{") {
 			name := l
 			name = strings.TrimSpace(name[7 : len(name)-1])
-			out += "\n " + name + " := func() *gorazor.SafeBuffer {\n"
-			out += "_buffer := &gorazor.SafeBuffer{Safe: true}\n"
+			out += "\n " + name + " := func() gorazor.SafeBuffer {\n"
+			out += "_buffer := gorazor.NewSafeBuffer()\n"
 			scope = 1
 			sections = append(sections, name)
 		} else if scope > 0 {
@@ -346,7 +346,7 @@ func (cp *Compiler) visit() {
 			head += ", "
 		}
 	}
-	head += ") *gorazor.SafeBuffer {\n _buffer := &gorazor.SafeBuffer{Safe: true}\n"
+	head += ") gorazor.SafeBuffer {\n _buffer := gorazor.NewSafeBuffer()\n"
 	cp.buf = head + cp.buf
 	cp.processLayout()
 }

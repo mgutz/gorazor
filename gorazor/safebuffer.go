@@ -7,26 +7,21 @@ import (
 )
 
 type SafeBuffer struct {
-	bytes.Buffer
-	Safe bool
+	*bytes.Buffer
 }
 
-func (self *SafeBuffer) WriteTo(w io.Writer) {
-	if self.Safe {
-		self.Buffer.WriteTo(w)
-	} else {
-		template.HTMLEscape(w, self.Buffer.Bytes())
-	}
+func NewSafeBuffer() SafeBuffer {
+	return SafeBuffer{Buffer: bytes.NewBuffer(nil)}
 }
 
-func (self *SafeBuffer) WriteSafe(t interface{}) {
+func (self SafeBuffer) WriteTo(w io.Writer) {
+	self.Buffer.WriteTo(w)
+}
+
+func (self SafeBuffer) WriteSafe(t interface{}) {
 	switch v := t.(type) {
-	case *SafeBuffer:
-		if v.Safe {
-			self.Write(v.Bytes())
-		} else {
-			self.WriteString(template.HTMLEscapeString(v.String()))
-		}
+	case SafeBuffer:
+		self.Write(v.Bytes())
 	default:
 		self.WriteString(template.HTMLEscaper(v))
 	}

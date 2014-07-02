@@ -11,19 +11,18 @@ func UnsafeHello(name string) string {
 }
 
 // Will not be escaped.
-func SafeHello(name string) *gorazor.SafeBuffer {
+func SafeHello(name string) gorazor.SafeBuffer {
 	// Safe = true tells `gorazor` this buffer is safe to write as-is
-	buffer := &gorazor.SafeBuffer{Safe: true}
-
+	buffer := gorazor.NewSafeBuffer()
 	buffer.WriteString("Hello <i>")
 	buffer.WriteSafe(name)
 	buffer.WriteString("</i>!")
 	return buffer
 }
 
-func Raw(t interface{}) *gorazor.SafeBuffer {
+func Raw(t interface{}) gorazor.SafeBuffer {
 	// Safe = true tells `gorazor` this buffer is safe to write as-is
-	buffer := &gorazor.SafeBuffer{Safe: true}
+	buffer := gorazor.NewSafeBuffer()
 	buffer.WriteString(fmt.Sprint(t))
 	return buffer
 }

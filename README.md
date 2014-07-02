@@ -32,8 +32,8 @@ Usage:
 ## Variable
 
 * `@variable` to insert **string** variable into html template
-  * variable could be wrapped by arbitrary go functions
-  * variable inserted will be automatically [escaped](http://golang.org/pkg/html/template/#HTMLEscapeString)
+* variable could be wrapped by arbitrary go functions
+* variable inserted will be automatically [escaped](http://golang.org/pkg/html/template/#HTMLEscapeString)
 
 ```html
 <div>Hello @user.Name</div>
@@ -46,12 +46,14 @@ Usage:
 `gorazor` by defaults escapes any value that is not a `SafeBuffer`. To
 insert unescaped data create a helper function. See [example helper](views/helper.go) directory:
 
-    func Raw(t interface{}) *gorazor.SafeBuffer {
-            // Safe = true tells `gorazor` this buffer is safe to write as-is
-            buffer := &gorazor.SafeBuffer{Safe: true}
-            buffer.WriteString(fmt.Sprint(t))
-            return buffer
-    }
+```go
+func Raw(t interface{}) gorazor.SafeBuffer {
+	// Safe = true tells `gorazor` this buffer is safe to write as-is
+	buffer := gorazor.NewSafeBuffer()
+	buffer.WriteString(fmt.Sprint(t))
+	return buffer
+}
+```
 
 
 ## Flow Control
@@ -149,10 +151,6 @@ So, using a helper template is similar to:
 
 ```
 
-GoRazor won't HTML escape the output of `helper.XXX`.
-
-Please use [example](https://github.com/sipin/gorazor/blob/master/examples/tpl/home.gohtml) for reference.
-
 ## Layout & Section
 
 The syntax for declaring layout is a bit tricky, in the example mentioned above:
@@ -173,12 +171,12 @@ A layout file `tpl/layout/base.gohtml` may look like:
 
 ```html
 @{
-	var body string
-	var sidebar string
-	var footer string
-	var title string
-	var css string
-	var js string
+	var body gorazor.SafeBuffer
+	var sidebar gorazor.SafeBuffer
+	var footer gorazor.SafeBuffer
+	var title gorazor.SafeBuffer
+	var css gorazor.SafeBuffer
+	var js gorazor.SafeBuffer
 }
 
 <!DOCTYPE html>
@@ -188,18 +186,18 @@ A layout file `tpl/layout/base.gohtml` may look like:
 	<title>@title</title>
 </head>
 <body>
-    <div class="container">@body</div>
-    <div class="sidebar">@sidebar</div>
-    <div class="footer">@footer</div>
-	@js
-  </body>
+        <div class="container">@body</div>
+        <div class="sidebar">@sidebar</div>
+        <div class="footer">@footer</div>
+        @js
+</body>
 </html>
 ```
 
 It's just a usual gorazor template, but:
 
-* First param must be `var body *gorazor.SafeBuffer` (As it's always required, maybe we could remove it in future?)
-* All params **must be** `*gorazor.SafeBuffer`, each param is considered as a **section**, the variable name is the **section name**.
+* First param must be `var body gorazor.SafeBuffer` (As it's always required, maybe we could remove it in future?)
+* All params **must be** `gorazor.SafeBuffer`, each param is considered as a **section**, the variable name is the **section name**.
 * Under `layout` package, i.e. within "layout" folder.
 
 A template using such layout `tpl/index.gohtml` may look like:
@@ -233,8 +231,8 @@ Thus, it's possible for the layout to define default section content in such man
 
 ```html
 @{
-	var body *gorazor.SafeBuffer
-	var sidebar *gorazor.SafeBuffer
+	var body gorazor.SafeBuffer
+	var sidebar gorazor.SafeBuffer
 }
 
 <body>
@@ -266,11 +264,10 @@ See the example [gorazor templates](https://github.com/mgutz/gorazor/tree/master
 ## How to auto re-generate when gohtml file changes?
 
 Use the right tool for the job. I recommend [node.js](https://nodejs.org) and
-[gulp](https://gulpjs.com). As of right now the build and asset preprocessing
-is lacking for gophers.
+[gulp](https://gulpjs.com). As of now build and asset preprocessing is lacking
+for gophers.
 
-See `example` directory.
-
+See `example` directory for an example `gulpfile`
 
 # Credits
 

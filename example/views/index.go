@@ -6,8 +6,8 @@ import (
 	"github.com/mgutz/gorazor/gorazor"
 )
 
-func Index(user *models.User) *gorazor.SafeBuffer {
-	_buffer := &gorazor.SafeBuffer{Safe: true}
+func Index(user *models.User) gorazor.SafeBuffer {
+	_buffer := gorazor.NewSafeBuffer()
 	_buffer.WriteString("\n\n<p>Escaped: ")
 	_buffer.WriteSafe(UnsafeHello(user.Name))
 	_buffer.WriteString("</p>\n<p>Unescaped: ")
@@ -15,8 +15,8 @@ func Index(user *models.User) *gorazor.SafeBuffer {
 	_buffer.WriteString("</p>")
 	_buffer.WriteSafe(Raw("<h2>Heading 2</h2>"))
 
-	js := func() *gorazor.SafeBuffer {
-		_buffer := &gorazor.SafeBuffer{Safe: true}
+	js := func() gorazor.SafeBuffer {
+		_buffer := gorazor.NewSafeBuffer()
 
 		_buffer.WriteString("<script>\n  alert('Hello, ")
 		_buffer.WriteSafe(user.Name)
@@ -25,8 +25,8 @@ func Index(user *models.User) *gorazor.SafeBuffer {
 		return _buffer
 	}
 
-	title := func() *gorazor.SafeBuffer {
-		_buffer := &gorazor.SafeBuffer{Safe: true}
+	title := func() gorazor.SafeBuffer {
+		_buffer := gorazor.NewSafeBuffer()
 
 		_buffer.WriteString("\"Cool Site\"")
 		return _buffer
