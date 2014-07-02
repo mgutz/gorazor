@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sipin/gorazor/gorazor"
+	"github.com/mgutz/gorazor/gorazor"
 )
 
 func Usage() {

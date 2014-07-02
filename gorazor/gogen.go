@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var GorazorNamespace = `"github.com/sipin/gorazor/gorazor"`
+var GorazorNamespace = `"github.com/mgutz/gorazor/gorazor"`
 
 //------------------------------ Compiler ------------------------------ //
 const (
@@ -176,28 +176,28 @@ func (cp *Compiler) visitExp(child interface{}, parent *Ast, idx int, isHomo boo
 	end := ""
 	ppNotExp := true
 	ppChildCnt := len(parent.Children)
-	pack := cp.dir
-	htmlEsc := cp.options["htmlEscape"]
+	//pack := cp.dir
+	//htmlEsc := cp.options["htmlEscape"]
 	if parent.Parent != nil && parent.Parent.Mode == EXP {
 		ppNotExp = false
 	}
 	val := getValStr(child)
-	if htmlEsc == nil {
-		if ppNotExp && idx == 0 && isHomo {
-			if val == "helper" || val == "html" || val == "raw" || pack == "layout" {
-				start += "("
-			} else {
-				start += "gorazor.HTMLEscape("
-				cp.imports[GorazorNamespace] = true
-			}
-		}
-		if ppNotExp && idx == ppChildCnt-1 && isHomo {
-			end += ")"
-		}
-	}
+	// if htmlEsc == nil {
+	// 	if ppNotExp && idx == 0 && isHomo {
+	// 		if val == "helper" || val == "html" || val == "raw" || pack == "layout" {
+	// 			start += "("
+	// 		} else {
+	// 			start += "gorazor.HTMLEscape("
+	// 			cp.imports[GorazorNamespace] = true
+	// 		}
+	// 	}
+	// 	if ppNotExp && idx == ppChildCnt-1 && isHomo {
+	// 		end += ")"
+	// 	}
+	// }
 
 	if ppNotExp && idx == 0 {
-		start = "_buffer.WriteString(" + start
+		start = "_buffer.WriteSafe(" + start
 	}
 	if ppNotExp && idx == ppChildCnt-1 {
 		end += ")\n"
@@ -213,6 +213,8 @@ func (cp *Compiler) visitExp(child interface{}, parent *Ast, idx int, isHomo boo
 }
 
 func (cp *Compiler) visitAst(ast *Ast) {
+	cp.imports[GorazorNamespace] = true
+
 	switch ast.Mode {
 	case MKP:
 		cp.firstBLK = 1
@@ -264,8 +266,8 @@ func (cp *Compiler) processLayout() {
 		if strings.HasPrefix(l, "section") && strings.HasSuffix(l, "{") {
 			name := l
 			name = strings.TrimSpace(name[7 : len(name)-1])
-			out += "\n " + name + " := func() string {\n"
-			out += "var _buffer bytes.Buffer\n"
+			out += "\n " + name + " := func() *gorazor.SafeBuffer {\n"
+			out += "_buffer := &gorazor.SafeBuffer{Safe: true}\n"
 			scope = 1
 			sections = append(sections, name)
 		} else if scope > 0 {
@@ -275,8 +277,8 @@ func (cp *Compiler) processLayout() {
 				scope--
 			}
 			if scope == 0 {
-				out += "return _buffer.String()\n}\n"
-				scope = 0
+				out += "return _buffer\n}\n"
+				//scope = 0
 			} else {
 				out += l + "\n"
 			}
@@ -291,7 +293,7 @@ func (cp *Compiler) processLayout() {
 		base := Capitalize(parts[len(parts)-1])
 		foot += "layout." + base + "("
 	}
-	foot += "_buffer.String()"
+	foot += "_buffer"
 	args := LayOutArgs(cp.layout)
 	if len(args) == 0 {
 		for _, sec := range sections {
@@ -332,7 +334,7 @@ func (cp *Compiler) visit() {
 	pack := cp.dir
 	fun := cp.file
 
-	cp.imports[`"bytes"`] = true
+	//cp.imports[`"bytes"`] = true
 	head := "package " + pack + "\n import (\n"
 	for k, _ := range cp.imports {
 		head += k + "\n"
@@ -344,7 +346,7 @@ func (cp *Compiler) visit() {
 			head += ", "
 		}
 	}
-	head += ") string {\n var _buffer bytes.Buffer\n"
+	head += ") *gorazor.SafeBuffer {\n _buffer := &gorazor.SafeBuffer{Safe: true}\n"
 	cp.buf = head + cp.buf
 	cp.processLayout()
 }

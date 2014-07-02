@@ -1,7 +1,5 @@
 # GoRazor
 
-[![Build Status](https://travis-ci.org/sipin/gorazor.svg?branch=master)](https://travis-ci.org/sipin/gorazor)
-
 GoRazor is the Go port of the razor view engine originated from [asp.net in 2011](http://weblogs.asp.net/scottgu/archive/2010/07/02/introducing-razor.aspx). In summary, GoRazor's:
 
 * Concise syntax, no delimiter like `<?`, `<%`, or `{{`.
@@ -21,7 +19,7 @@ GoRazor is the Go port of the razor view engine originated from [asp.net in 2011
 Install:
 
 ```sh
-go get github.com/sipin/gorazor
+go get github.com/mgutz/gorazor
 ```
 
 Usage:
@@ -35,7 +33,7 @@ Usage:
 
 * `@variable` to insert **string** variable into html template
   * variable could be wrapped by arbitrary go functions
-  * variable inserted will be automatically [esacped](http://golang.org/pkg/html/template/#HTMLEscapeString)
+  * variable inserted will be automatically [escaped](http://golang.org/pkg/html/template/#HTMLEscapeString)
 
 ```html
 <div>Hello @user.Name</div>
@@ -45,13 +43,16 @@ Usage:
 <div>Hello @strings.ToUpper(req.CurrentUser.Name)</div>
 ```
 
-Use `raw` to skip escaping:
+`gorazor` by defaults escapes any value that is not a `SafeBuffer`. To
+insert unescaped data create a helper function. See [example helper](views/helper.go) directory:
 
-```html
-<div>@raw(user.Name)</div>
-```
+    func Raw(t interface{}) *gorazor.SafeBuffer {
+            // Safe = true tells `gorazor` this buffer is safe to write as-is
+            buffer := &gorazor.SafeBuffer{Safe: true}
+            buffer.WriteString(fmt.Sprint(t))
+            return buffer
+    }
 
-Only use `raw` when you are 100% sure what you are doing, please always be aware of [XSS attack](http://en.wikipedia.org/wiki/Cross-site_scripting).
 
 ## Flow Control
 
@@ -81,8 +82,6 @@ Only use `raw` when you are 100% sure what you are doing, please always be aware
 	}
 }
 ```
-
-Please use [example](https://github.com/sipin/gorazor/blob/master/examples/tpl/home.gohtml) for reference.
 
 ## Code block
 
@@ -199,8 +198,8 @@ A layout file `tpl/layout/base.gohtml` may look like:
 
 It's just a usual gorazor template, but:
 
-* First param must be `var body string` (As it's always required, maybe we could remove it in future?)
-* All params **must be** string, each param is considered as a **section**, the variable name is the **section name**.
+* First param must be `var body *gorazor.SafeBuffer` (As it's always required, maybe we could remove it in future?)
+* All params **must be** `*gorazor.SafeBuffer`, each param is considered as a **section**, the variable name is the **section name**.
 * Under `layout` package, i.e. within "layout" folder.
 
 A template using such layout `tpl/index.gohtml` may look like:
@@ -234,8 +233,8 @@ Thus, it's possible for the layout to define default section content in such man
 
 ```html
 @{
-	var body string
-	var sidebar string
+	var body *gorazor.SafeBuffer
+	var sidebar *gorazor.SafeBuffer
 }
 
 <body>
@@ -256,38 +255,22 @@ Thus, it's possible for the layout to define default section content in such man
 * Template file name must has the extension name `.gohtml`
 * Template strip of `.gohtml` extension name will be used as the **function name** in generated code, with **first letter Capitalized**.
   * So that the function will be accessible to other modules. (I hate GO about this.)
-* Helper templates **must** has the package name **helper**, i.e. in `helper` folder.
 * Layout templates **must** has the package name **layout**, i.e. in `layout` folder.
 
 # Example
 
-Here is a simple example of [gorazor templates](https://github.com/sipin/gorazor/tree/master/examples/tpl) and the corresponding [generated codes](https://github.com/sipin/gorazor/tree/master/examples/gen).
+See the example [gorazor templates](https://github.com/mgutz/gorazor/tree/master/example).
 
 # FAQ
 
 ## How to auto re-generate when gohtml file changes?
 
-We may add `gorazor watch` cmd after Go 1.3 which has official [fsnotify](https://docs.google.com/document/d/1xl_aRcCbksFRmCKtoyRQG9L7j6DIdMZtrkFAoi5EXaA/edit) support.
+Use the right tool for the job. I recommend [node.js](https://nodejs.org) and
+[gulp](https://gulpjs.com). As of right now the build and asset preprocessing
+is lacking for gophers.
 
-Currently, we are using below scripts to handle this issue on mac:
+See `example` directory.
 
-* gorazor_watch.sh
-```bash
-#!/bin/bash
-
-gorazor tpl src/tpl
-watchmedo shell-command --patterns="*.gohtml" --recursive --command='python gorazor.py ${watch_src_path}'
-```
-
-* gorazor.py
-```python
-import sys, os
-
-path = sys.argv[1]
-os.system("gorazor " + path + " " + path.replace("/tpl/", "/src/tpl/")[:-4])
-```
-
-* [watchmedo](https://github.com/gorakhargosh/watchdog)
 
 # Credits
 
