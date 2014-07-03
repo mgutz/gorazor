@@ -1,9 +1,15 @@
-@{
+@meta {
   import (
-    "github.com/mgutz/gorazor/example/views/layout/default"
+    "github.com/mgutz/gorazor/example/views/layout"
     "github.com/mgutz/gorazor/example/models"
   )
-  var user *models.User
+
+  +func(user *models.User)
+  +return layout.Default(VIEW, gorazor.Empty, js(), title)
+}
+
+@{
+  title := "Cool Site"
 }
 
 <p>Escaped: @UnsafeHello(user.Name)</p>
@@ -12,12 +18,9 @@
 @Raw("<h2>Heading 2</h2>")
 
 @section js {
-<script>
-  alert('Hello, @user.Name');
-</script>
+  <script>
+    alert('Hello, @user.Name');
+  </script>
 }
 
-@section title {
-  @"Cool Site"
-}
 

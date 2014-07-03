@@ -1,7 +1,5 @@
 @{
-    var body gorazor.SafeBuffer
-    var js gorazor.SafeBuffer
-    var title gorazor.SafeBuffer
+    +func(body, css, js gorazor.SafeBuffer, title string)
 }
 
 <!DOCTYPE html>
@@ -9,6 +7,7 @@
 <head>
     <meta charset="utf-8" />
     <title>@title</title>
+    @css
 </head>
 <body>
     <div class="container">@body</div>

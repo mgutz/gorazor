@@ -6,6 +6,8 @@ import (
 	"io"
 )
 
+var Empty = NewSafeBuffer()
+
 type SafeBuffer struct {
 	*bytes.Buffer
 }
