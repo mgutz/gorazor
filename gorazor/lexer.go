@@ -67,16 +67,16 @@ func rec(reg string) *regexp.Regexp {
 
 // The order is important
 var Tests = []TokenMatch{
-	TokenMatch{EMAIL, "EMAIL", rec(`([a-zA-Z0-9.%]+@[a-zA-Z0-9.\-]+\.(?:ca|co\.uk|com|edu|net|org))\b`)},
-	TokenMatch{HTML_TAG_OPEN, "HTML_TAG_OPEN", rec(`(<[a-zA-Z@]+?[^>]*?["a-zA-Z]*>)`)},
-	TokenMatch{HTML_TAG_CLOSE, "HTML_TAG_CLOSE", rec(`(</[^>@]+?>)`)},
-	TokenMatch{HTML_TAG_VOID_CLOSE, "HTML_TAG_VOID_CLOSE", rec(`(\/\s*>)`)},
-	TokenMatch{KEYWORD, "KEYWORD", rec(`(case|do|else|section|for|func|goto|if|return|switch|var|with|meta)([^\d\w])`)},
-	TokenMatch{IDENTIFIER, "IDENTIFIER", rec(`([_$a-zA-Z][_$a-zA-Z0-9]*(\.\.\.)?)`)}, //need verify
-	TokenMatch{OPERATOR, "OPERATOR", rec(`(==|!=|>>|<<|>=|<=|>|<|\+|-|\/|\*|\^|%|\:|\?)`)},
-	TokenMatch{ESCAPED_QUOTE, "ESCAPED_QUOTE", rec(`(\\+['\"])`)},
-	TokenMatch{NUMERIC_CONTENT, "NUMERIC_CONTENT", rec(`([0-9]+)`)},
-	TokenMatch{CONTENT, "CONTENT", rec(`([^\s})@.]+?)`)},
+	{EMAIL, "EMAIL", rec(`([a-zA-Z0-9.%]+@[a-zA-Z0-9.\-]+\.(?:ca|co\.uk|com|edu|net|org))\b`)},
+	{HTML_TAG_OPEN, "HTML_TAG_OPEN", rec(`(<[a-zA-Z@]+?[^>]*?["a-zA-Z]*>)`)},
+	{HTML_TAG_CLOSE, "HTML_TAG_CLOSE", rec(`(</[^>@]+?>)`)},
+	{HTML_TAG_VOID_CLOSE, "HTML_TAG_VOID_CLOSE", rec(`(\/\s*>)`)},
+	{KEYWORD, "KEYWORD", rec(`(case|do|else|section|for|func|goto|if|return|switch|var|with|meta)([^\d\w])`)},
+	{IDENTIFIER, "IDENTIFIER", rec(`([_$a-zA-Z][_$a-zA-Z0-9]*(\.\.\.)?)`)}, //need verify
+	{OPERATOR, "OPERATOR", rec(`(==|!=|>>|<<|>=|<=|>|<|\+|-|\/|\*|\^|%|\:|\?)`)},
+	{ESCAPED_QUOTE, "ESCAPED_QUOTE", rec(`(\\+['\"])`)},
+	{NUMERIC_CONTENT, "NUMERIC_CONTENT", rec(`([0-9]+)`)},
+	{CONTENT, "CONTENT", rec(`([^\s})@.]+?)`)},
 }
 
 type Token struct {

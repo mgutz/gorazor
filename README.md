@@ -1,8 +1,8 @@
-# Razor
+# razor
 
-Razor is the Go port of the ASP.NET's Razor view engine.
+`razor` is the Go port of the ASP.NET's Razor view engine.
 
-This is a code generation library which converts Razor templates into Go functions.
+`razor` is a code generation library which converts Razor templates into Go functions.
 
 # Usage
 
@@ -22,7 +22,8 @@ razor template_file output_file
 ## Layout & Views
 
 Let's cover the basic case of a view with a layout. In `razor` templates become
-functions. A gopher should be able to make sense of the meta header.
+functions.
+
 A layout is nothing more than function which receives the rendered result of a view.
 That is, given a layout function named `Layout` and a view function `View`, the view
 is rendered as `Layout(View())`.
@@ -48,12 +49,14 @@ Let's see this in action.  First define a layout, `views/layout/base.gohtml`
 </html>
 ```
 
-We declared a layout function with a signature of
+The first block of template instructs  `razor` how to generate the function.  The
+layout declares a function with a signature of
 
     (title string, css razor.SafeBuffer, body razor.SafeBuffer, js razor.SafeBuffer)
 
-The arguments are used in the template body and denoted with `@`. Let's now define
-a view `views/index.gohtml` which uses the layout.
+The arguments are used in the template body and denoted with `@`.
+
+Let's now define a view `views/index.gohtml` to use the layout.
 
 ```html
 @meta {
@@ -79,14 +82,13 @@ a view `views/index.gohtml` which uses the layout.
 }
 ```
 
-This view has a signature of `(name string)` which is used in the `js` section.
-A variable `title` is set in a code block and is used by the layout. A section named,
-`js`, becomes its own function. The magic all happens in the template functions view's
-return value of `layout.Base(title, "", VIEW, js())`. `VIEW` is a placeholder for
-the rendered value of the view template.
+This view has a signature of `(name string)` which means `name` will be passed in
+as an argument.  A variable `title` is set in a code block and is used by the layout.
+A section named `js` becomes its own function. The magic all happens in the
+function's return value of `layout.Base(title, "", VIEW, js())`. `VIEW` is a placeholder
+for the rendered value of the view template.
 
-
-Calling it from Go.
+To call from Go code
 
 ```go
 import (
@@ -94,13 +96,20 @@ import (
 )
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-    views.Index("Mario").WriteTo(w)
+    views.Index("gopherito").WriteTo(w)
 }
 ```
 
-# Syntax
+See [working example](example).
 
-## Variable
+| Description | Template | Generated code |
+| ------------| -------- | ---------------|
+| View |  [index.gohtml](example/views/index.gohtml) | [index.go](example/views/index.go) |
+| Layout | [default.gohtml](example/views/layout/default.gohtml) | [default.go](example/views/layout/default.go) |
+
+## Syntax
+
+### Variable
 
 * `@variable` to insert **string** variable into html template
 * variable could be wrapped by arbitrary go functions
@@ -127,7 +136,7 @@ func Raw(t interface{}) gorazor.SafeBuffer {
 ```
 
 
-## Flow Control
+### Flow Control
 
 ```php
 @if .... {
@@ -156,7 +165,7 @@ func Raw(t interface{}) gorazor.SafeBuffer {
 }
 ```
 
-## Code block
+### Code block
 
 It's possible to insert arbitrary go code block in the template, like create new variable.
 
@@ -172,7 +181,7 @@ It's possible to insert arbitrary go code block in the template, like create new
 </div>
 ```
 
-## Declaration
+### Declaration
 
 The **first code block** in the template is strictly for declaration:
 
@@ -226,7 +235,7 @@ The variables declared in **first code block** will be the models of the templat
 If your template doesn't need any model input, then just leave it blank.
 
 
-## Helper / Include other template
+### Helper / Include other template
 
 `razor` compiles templates to go function, embedding another template is
 just calling another go function.
@@ -234,17 +243,14 @@ just calling another go function.
 
 * A layout should be able to use another layout, it's just function call.
 
-# Conventions
+## Conventions
 
 * Template **folder name** will be used as **package name** in generated code
 * Template file name must have the extension name `.gohtml`
 * The **function name** is the Capitalized basename of the file (without extension).
 
-# Example
 
-See the example [gorazor templates](https://github.com/mgutz/gorazor/tree/master/example).
-
-# FAQ
+## FAQ
 
 ## How to auto re-generate when gohtml file changes?
 

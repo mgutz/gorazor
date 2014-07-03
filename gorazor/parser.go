@@ -408,7 +408,7 @@ func (parser *Parser) handleBLK(token Token) error {
 		if err != nil {
 			return err
 		}
-		for idx, _ := range subTokens {
+		for idx := range subTokens {
 			if subTokens[idx].Type == AT {
 				subTokens[idx].Type = CONTENT
 			}
