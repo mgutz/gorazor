@@ -1,8 +1,8 @@
 # razor
 
 `razor` is a Go port of ASP.NET's Razor view engine.  `razor` is a code
-generator which compiles Razor templates into Go functions. It is fast and
-type safe.
+generator which compiles Razor templates into Go functions. It is fast, type
+safe and escapes all values by default.
 
 # Usage
 
@@ -21,10 +21,8 @@ gorazor template_file output_file
 
 ## Layout & Views
 
-Let's cover the basic case of a view with a layout. In `razor` each template becomes
-a Go function.
-
-A layout is a unction a which receives the rendered result of a view.
+Let's cover the basic use case of a view with a layout. In `razor` each template becomes
+a Go function.  A layout is a function a which receives the rendered result of a view.
 That is, given a layout function named `Layout` and a view function `View`, the view
 is rendered as `Layout(View())`.
 
@@ -49,17 +47,13 @@ Let's step through it. First define a layout, `views/layout/base.go.html`
 </html>
 ```
 
-By convention, the package name is derived from the parent directory: `layout`.
-The function name is derived from the basename of the file: `Base`. In this
-example the template is callable from Go as `layout.Base(..)`
-
-The first block of template instructs  `razor` how to generate the function. In
-this example, the layout declares a layout declares a function with a signature of
+The first block of template instructs `razor` how to generate the function. In
+this example, the header declares a function with a signature of
 
     (title string, css razor.SafeBuffer, body razor.SafeBuffer, js razor.SafeBuffer)
 
-Notice the arguments in the template body, denoted by `@`. `razor` safely escapes
-these values.
+Notice the arguments are used in the template as variables denoted by `@`.
+The layout expects these values from the view.
 
 Let's now define a view `views/index.go.html` to use the layout.
 
@@ -69,7 +63,7 @@ Let's now define a view `views/index.go.html` to use the layout.
         "views/layout"
     )
 
-    // `+` indicates a directive which is not valid Go syntax
+    // `+` indicates a directive and is intentionally not valid Go syntax
     +func (name string)
     +return layout.Base(title, "", VIEW, js())
 
