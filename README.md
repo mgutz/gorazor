@@ -1,35 +1,119 @@
-# GoRazor
+# razor
 
-GoRazor is the Go port of the razor view engine originated from [asp.net in 2011](http://weblogs.asp.net/scottgu/archive/2010/07/02/introducing-razor.aspx). In summary, GoRazor's:
-
-* Concise syntax, no delimiter like `<?`, `<%`, or `{{`.
-  * Original [Razor Syntax](http://www.asp.net/web-pages/tutorials/basics/2-introduction-to-asp-net-web-programming-using-the-razor-syntax) & [quick reference](http://haacked.com/archive/2011/01/06/razor-syntax-quick-reference.aspx/) for asp.net.
-* Able to mix go code in view template
-  * Insert code block to import & call arbitrary go modules & functions
-  * Flow controls are just Go, no need to learn another mini-language
-* Code generation approach
-  * No reflection overhead
-  * Go compiler validation for free
-* Strong type view model
-* Embedding templates support
-* Layout/Section support
+`razor` is a Go port of ASP.NET's Razor view engine.  `razor` is a code
+generator which compiles Razor templates into Go functions. It is fast and
+type safe.
 
 # Usage
 
-Install:
+Install
 
 ```sh
-go get github.com/mgutz/gorazor
+go get github.com/mgutz/razor
 ```
 
-Usage:
+Running
 
-`gorazor template_folder output_folder` or
-`gorazor template_file output_file`
+```sh
+razor template_folder output_folder
+razor template_file output_file
+```
 
-# Syntax
+## Layout & Views
 
-## Variable
+Let's cover the basic case of a view with a layout. In `razor` each template becomes
+a Go function.
+
+A layout is a unction a which receives the rendered result of a view.
+That is, given a layout function named `Layout` and a view function `View`, the view
+is rendered as `Layout(View())`.
+
+Let's step through it. First define a layout, `views/layout/base.go.html`
+
+```html
+@{
+    +func(title string, css razor.SafeBuffer, body razor.SafeBuffer, js razor.SafeBuffer)
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>@title</title>
+        @css
+</head>
+<body>
+        <div class="container">@body</div>
+        @js
+</body>
+</html>
+```
+
+By convention, the package name is derived from the parent directory: `layout`.
+The function name is derived from the basename of the file: `Base`. In this
+example the template is callable from Go as `layout.Base(..)`
+
+The first block of template instructs  `razor` how to generate the function. In
+this example, the layout declares a layout declares a function with a signature of
+
+    (title string, css razor.SafeBuffer, body razor.SafeBuffer, js razor.SafeBuffer)
+
+Notice the arguments in the template body, denoted by `@`. `razor` safely escapes
+these values.
+
+Let's now define a view `views/index.go.html` to use the layout.
+
+```html
+@{
+    import (
+        "views/layout"
+    )
+
+    // `+` indicates a directive which is not valid Go syntax
+    +func (name string)
+    +return layout.Base(title, "", VIEW, js())
+
+    // inline code inserted in the function
+    title := "Welcome Page"
+}
+
+<h2>Welcome to homepage</h2>
+
+@section js {
+<script>
+    alert('hello! @name')
+</script>
+}
+```
+
+This view has a signature of `(name string)` which means a `name` value must be passed in
+as an argument.  A variable `title` is set in a code block and is used by the layout.
+A `section` named `js` becomes its own function. The magic all happens in the
+function's return value of `layout.Base(title, "", VIEW, js())`. `VIEW` is a placeholder
+for the rendered value of the view template.
+
+To call from Go code
+
+```go
+import (
+    "views"
+)
+
+func viewHandler(w http.ResponseWriter, r *http.Request) {
+    views.Index("gopherito").WriteTo(w)
+}
+```
+
+See [working example](example).
+
+| Description | Template | Generated code |
+| ------------| -------- | ---------------|
+| View |  [index.go.html](example/views/index.go.html) | [index.go](example/views/index.go) |
+| Layout | [default.go.html](example/views/layout/default.go.html) | [default.go](example/views/layout/default.go) |
+
+## Syntax
+
+### Variable
 
 * `@variable` to insert **string** variable into html template
 * variable could be wrapped by arbitrary go functions
@@ -43,7 +127,7 @@ Usage:
 <div>Hello @strings.ToUpper(req.CurrentUser.Name)</div>
 ```
 
-`gorazor` by defaults escapes any value that is not a `SafeBuffer`. To
+`razor` escapes any value that is not of type `razor.SafeBuffer`. To
 insert unescaped data create a helper function. See [example helper](views/helper.go) directory:
 
 ```go
@@ -56,228 +140,119 @@ func Raw(t interface{}) gorazor.SafeBuffer {
 ```
 
 
-## Flow Control
+### Flow Control
 
 ```php
-@if .... {
-	....
+@if condition {
+    ...
 }
 
-@if .... {
-	....
+@if condition {
+    ...
 } else {
-	....
+    ...
 }
 
-@for .... {
-
+@for condition {
+    ...
 }
 
 @{
-	switch .... {
-	case ....:
-	      <p>...</p>
-	case 2:
-	      <p>...</p>
-	default:
-	      <p>...</p>
-	}
+    switch variable {
+    case 1:
+          <p>...</p>
+    case 2:
+          <p>...</p>
+    default:
+          <p>...</p>
+    }
 }
 ```
 
-## Code block
+### Code block
 
 It's possible to insert arbitrary go code block in the template, like create new variable.
 
 ```html
 @{
-	username := u.Name
-	if u.Email != "" {
-		username += "(" + u.Email + ")"
-	}
+    username := u.Name
+    if u.Email != "" {
+        username += "(" + u.Email + ")"
+    }
 }
 <div class="welcome">
 <h4>Hello @username</h4>
 </div>
 ```
 
-It's recommendation to keep clean separation of code & view. Please consider move logic into your code before creating a code block in template.
+### Declaration
 
-## Declaration
+The **first code block** is strictly for declaration:
 
-The **first code block** in template is strictly for declaration:
-
-* imports
-* model type
-* layout
-
-like:
-
-```go
-@{
-	import  (
-		"kp/models"   //import `"kp/models"` package
-		"tpl/layout/base"  //Use tpl/layout package's **base func** for layout
-	)
-	var user *models.User //1st template param
-	var blog *models.Blog //2nd template param
-}
-...
 ```
+@{
+    import ...
+    +func ...
+    +return ...
+}
+```
+
+*   **import** - Optional. Import packages used by view.
+
+        import (
+            "sipin/views"
+            "sipin/models"
+        )
+
+*   **+func** - Optional. Declare the signature for the generated function. Defaults to `()`
+
+        +func (user *models.user)
+
+*   **+return** - Optional. Override the return value. Defaults to rendered template value.
+
+        +return views.Layout(VIEW, scripts())
+
 
 **first code block** must be at the beginning of the template, i.e. before any html.
 
-Any other codes inside the first code block will **be ignored**.
+`import` must be wrapped in `()`
 
-import must be wrapped in `()`, `import "package_name"` is not yet supported.
 
-The variables declared in **first code block** will be the models of the template, i.e. the parameters of generated function.
+### Helper / Include other template
 
-If your template doesn't need any model input, then just leave it blank.
+`razor` compiles templates to go functions. Composition and helpers are simply
+Go functions which return values that can be converted to `string`.
 
-## Helper / Include other template
+If your helper needs to write unescaped values to the output buffer, use
+`razor.SafeBuffer` which is a `bytes.Buffer`. `@razor.Raw` may also be used but
+is not recommended. Keep your template clean by returning `SafeBuffer`.
 
-As gorazor compiles templates to go function, embedding another template is just calling the generated function, like any other go function.
+## Conventions
 
-However, if the template are designed to be embedded, it must be under `helper` namespace, i.e. put them in `helper` sub-folder.
+*   Package name is derived from directory name.
 
-So, using a helper template is similar to:
+        "views/layout" => package layout
+        "views/home" => package home
 
-```html
+*   Template filename must have the extension name `.go.html`
 
-@if msg != "" {
-	<div>@helper.ShowMsg(msg)</div>
-}
+*   Function name is the Capitalized basename of the file without the extension.
 
-```
+        "views/layout/default.html" => function Default()
+        "views/home/index.gothml" => function Index()
 
-## Layout & Section
 
-The syntax for declaring layout is a bit tricky, in the example mentioned above:
+## FAQ
 
-```go
-@{
-	import  (
-		"tpl/layout/base"
-	)
-}
-```
-
-`"tpl/layout/base"` **is not** a package, it's actually referring to `"tpl/layout"` package's **Base** function, which should be generated by `tpl/layout/base.gohtml`.
-
-GoRazor is using the second last part of namespace `layout` as a magic string to decide if the import is for layout declaration or normal import.
-
-A layout file `tpl/layout/base.gohtml` may look like:
-
-```html
-@{
-	var body gorazor.SafeBuffer
-	var sidebar gorazor.SafeBuffer
-	var footer gorazor.SafeBuffer
-	var title gorazor.SafeBuffer
-	var css gorazor.SafeBuffer
-	var js gorazor.SafeBuffer
-}
-
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="utf-8" />
-	<title>@title</title>
-</head>
-<body>
-        <div class="container">@body</div>
-        <div class="sidebar">@sidebar</div>
-        <div class="footer">@footer</div>
-        @js
-</body>
-</html>
-```
-
-It's just a usual gorazor template, but:
-
-* First param must be `var body gorazor.SafeBuffer` (As it's always required, maybe we could remove it in future?)
-* All params **must be** `gorazor.SafeBuffer`, each param is considered as a **section**, the variable name is the **section name**.
-* Under `layout` package, i.e. within "layout" folder.
-
-A template using such layout `tpl/index.gohtml` may look like:
-
-```html
-@{
-	import (
-		"tpl/layout"
-	)
-}
-
-@section footer {
-	<div>Copyright 2014</div>
-}
-
-<h2>Welcome to homepage</h2>
-```
-
-With the page, the page content will be treated as the `body` section in layout.
-
-The other section content need to be wrapped with
-```
-@section SectionName {
-	....
-}
-```
-
-The template doesn't need to specify all section defined in layout. If a section is not specified, it will be consider as `""`.
-
-Thus, it's possible for the layout to define default section content in such manner:
-
-```html
-@{
-	var body gorazor.SafeBuffer
-	var sidebar gorazor.SafeBuffer
-}
-
-<body>
-    <div class="container">@body</div>
-    @if sidebar == "" {
-    <div class="sidebar">I'm the default side bar</div>
-	} else {
-    <div class="sidebar">@sidebar</div>
-	}
-</body>
-```
-
-* A layout should be able to use another layout, it's just function call.
-
-# Conventions
-
-* Template **folder name** will be used as **package name** in generated code
-* Template file name must has the extension name `.gohtml`
-* Template strip of `.gohtml` extension name will be used as the **function name** in generated code, with **first letter Capitalized**.
-  * So that the function will be accessible to other modules. (I hate GO about this.)
-* Layout templates **must** has the package name **layout**, i.e. in `layout` folder.
-
-# Example
-
-See the example [gorazor templates](https://github.com/mgutz/gorazor/tree/master/example).
-
-# FAQ
-
-## How to auto re-generate when gohtml file changes?
+## Watch go.html files?
 
 Use the right tool for the job. I recommend [node.js](https://nodejs.org) and
-[gulp](https://gulpjs.com). As of now build and asset preprocessing is lacking
-for gophers.
+[gulp](https://gulpjs.com) at this time. As of now build and asset preprocessing is
+lacking for gophers.
 
 See `example` directory for an example `gulpfile`
 
 # Credits
 
-The very [first version](https://github.com/sipin/gorazor/releases/tag/vash) of GoRazor is essentially a hack of razor's port in javascript: [vash](https://github.com/kirbysayshi/vash), thus requires node's to run.
+The original and more awesome [sipin gorazor](https://github.com/sipin/gorazor).
 
-GoRazor has been though several rounds of refactoring and it has completely rewritten in pure Go. Nonetheless, THANK YOU [@kirbysayshi](https://github.com/kirbysayshi) for Vash! Without Vash, GoRazor may never start.
-
-# Todo
-
-* Add tools, like monitor template changes and auto re-generate
-* Add default html widgets
-* Add more usage examples
-* Generate more function overloads, like accept additional buffer parameter for write

@@ -1,9 +1,8 @@
 # gorazor Example
 
-Building the views
+Reuilding the views in-place
 
-    cd example
-    gorazor views views
+    razor views views
 
 ## Rebuilding views automatically
 

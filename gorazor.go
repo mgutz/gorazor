@@ -1,13 +1,11 @@
 package main
 
-// considering import fsnotify
-
 import (
 	"flag"
 	"fmt"
 	"os"
 
-	"github.com/mgutz/gorazor/gorazor"
+	"github.com/mgutz/gorazor/razor"
 )
 
 func Usage() {
@@ -19,7 +17,7 @@ func Usage() {
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
-	options := gorazor.Option{}
+	options := razor.Option{}
 
 	if flag.NArg() == 3 && flag.Arg(2) == "-debug" {
 		options["Debug"] = true
@@ -33,13 +31,13 @@ func main() {
 		}
 		if stat.IsDir() {
 			fmt.Printf("Gorazor processing dir: %s -> %s\n", arg1, arg2)
-			err := gorazor.GenFolder(arg1, arg2, options)
+			err := razor.GenFolder(arg1, arg2, options)
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else if stat.Mode().IsRegular() {
 			fmt.Printf("Gorazor processing file: %s -> %s\n", arg1, arg2)
-			gorazor.GenFile(arg1, arg2, options)
+			razor.GenFile(arg1, arg2, options)
 		} else {
 			flag.Usage()
 		}

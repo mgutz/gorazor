@@ -1,8 +1,7 @@
 package views
 
 import (
-	"fmt"
-	"github.com/mgutz/gorazor/gorazor"
+	"github.com/mgutz/gorazor/razor"
 )
 
 // This will be escaped by the template
@@ -10,19 +9,11 @@ func UnsafeHello(name string) string {
 	return "Hello <i>" + name + "</i>!"
 }
 
-// Will not be escaped.
-func SafeHello(name string) gorazor.SafeBuffer {
-	// Safe = true tells `gorazor` this buffer is safe to write as-is
-	buffer := gorazor.NewSafeBuffer()
+// Will not be escaped since we are using SafeBuffer.
+func SafeHello(name string) razor.SafeBuffer {
+	buffer := razor.NewSafeBuffer()
 	buffer.WriteString("Hello <i>")
 	buffer.WriteSafe(name)
 	buffer.WriteString("</i>!")
-	return buffer
-}
-
-func Raw(t interface{}) gorazor.SafeBuffer {
-	// Safe = true tells `gorazor` this buffer is safe to write as-is
-	buffer := gorazor.NewSafeBuffer()
-	buffer.WriteString(fmt.Sprint(t))
 	return buffer
 }
