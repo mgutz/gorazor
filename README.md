@@ -9,14 +9,14 @@ type safe.
 Install
 
 ```sh
-go get github.com/mgutz/razor
+go get github.com/mgutz/gorazor
 ```
 
 Running
 
 ```sh
-razor template_folder output_folder
-razor template_file output_file
+gorazor template_folder output_folder
+gorazor template_file output_file
 ```
 
 ## Layout & Views
@@ -128,17 +128,24 @@ See [working example](example).
 ```
 
 `razor` escapes any value that is not of type `razor.SafeBuffer`. To
-insert unescaped data create a helper function. See [example helper](views/helper.go) directory:
+insert unescaped data use `github.com/mgutz/gorazor/html#Raw`
 
-```go
-func Raw(t interface{}) gorazor.SafeBuffer {
-	// Safe = true tells `gorazor` this buffer is safe to write as-is
-	buffer := gorazor.NewSafeBuffer()
-	buffer.WriteString(fmt.Sprint(t))
-	return buffer
-}
+```html
+    @html.Raw("<h2>Heading 2</div>")
 ```
 
+### Helper Functions
+
+To create function whose result should not be escaped, return
+`razor.SafeBuffer`. Here's how `Raw` is implemented.
+
+```go
+func Raw(t interface{}) razor.SafeBuffer {
+    buffer := razor.NewSafeBuffer()
+    buffer.WriteString(fmt.Sprint(t))
+    return buffer
+}
+```
 
 ### Flow Control
 
@@ -241,7 +248,6 @@ is not recommended. Keep your template clean by returning `SafeBuffer`.
         "views/layout/default.html" => function Default()
         "views/home/index.gothml" => function Index()
 
-
 ## FAQ
 
 ## Watch go.html files?
@@ -254,5 +260,6 @@ See `example` directory for an example `gulpfile`
 
 # Credits
 
-The original and more awesome [sipin gorazor](https://github.com/sipin/gorazor).
+The original and likely more awesome [sipin gorazor](https://github.com/sipin/gorazor).
+
 
