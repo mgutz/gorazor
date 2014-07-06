@@ -246,11 +246,8 @@ is not recommended. Keep your template clean by returning `SafeBuffer`.
 
 ## Watch go.html files?
 
-Use the right tool for the job. I recommend [node.js](https://nodejs.org) and
-[gulp](https://gulpjs.com) at this time. As of now build and asset preprocessing is
-lacking for gophers.
-
-See `example` directory for an example `gulpfile`
+Use [gosu](http://github.com/mgutz/gosu).  See `example` directory on how
+easy it is to use *gosu*
 
 # Credits
 

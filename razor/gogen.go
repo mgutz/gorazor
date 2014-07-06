@@ -153,7 +153,7 @@ func (cp *Compiler) visitFirstBLK(blk *Ast) {
 			cp.params = vname
 		} else if strings.HasPrefix(l, "+return ") {
 			vname := l[8:]
-			cp.result = strings.Replace(vname, "VIEW,", "_buffer,", -1)
+			cp.result = strings.Replace(vname, "VIEW", "_buffer,", -1)
 		} else if l != "" {
 			cp.addPart(Part{CSTAT, l + "\n"})
 		}
